@@ -1,0 +1,21 @@
+{
+    "name": "tecnologias-emergentes-backend",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "vscjava.vscode-java-pack",
+                "redhat.java",
+                "matklad.rust-analyzer"
+            ]
+        }
+    },
+    "forwardPorts": [
+        8080,
+        5432
+    ],
+    "postCreateCommand": "mvn -DskipTests package",
+    "remoteUser": "root"
+}

@@ -1,3 +1,20 @@
 spring:
   application:
     name: tecnologias-emergentes
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/tecnologias}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+# H2 console (dev)
+spring.h2.console.enabled: true
+spring.h2.console.path: /h2-console
+
+# Security defaults (can be overridden via env)
+app.security.admin-user: admin
+app.security.admin-password: admin
