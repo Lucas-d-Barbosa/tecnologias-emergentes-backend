@@ -1,4 +1,4 @@
-FROM maven:3.10.1-eclipse-temurin-21 AS build
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /workspace
 
 # copy only what is needed for dependency download
