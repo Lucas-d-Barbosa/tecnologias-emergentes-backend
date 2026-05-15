@@ -1,55 +1,80 @@
-🚀 P.I - Tecnologias Emergentes
+# 🚀 P.I - Tecnologias Emergentes
 
-🛠️ Pré-requisitos
+## 📋 Pré-requisitos
+
 Antes de começar, você precisará ter instalado em sua máquina:
 
-Java OPENJDK 21.
+* Java OpenJDK 21
+* Docker & Docker Desktop (para o banco de dados)
+* Maven (opcional, se usar o mvnw incluso no projeto)
+* Bruno, Postman ou Insomnia para testar as requisições
 
-Maven (opcional, se usar o mvnw incluso no projeto).
+## 🗄️ Infraestrutura (Banco de Dados)
 
-Bruno, Postman ou Insomnia ou cURL para testar as requisições (alternativas locais ao Postman).
+Para facilitar o desenvolvimento local, utilizamos Docker para subir o PostgreSQL e o pgAdmin4.
 
-📥 Como Baixar
+### 1. Criar Rede e Subir Containers
+
+Execute os comandos abaixo no terminal:
+
+docker network create database-connection
+
+docker run --name tecnologias-emergentes-db --network database-connection -e POSTGRES_PASSWORD=admin -p 5432:5432 -d postgres:alpine
+
+docker run --name pgadmin4 --network database-connection -e 'PGADMIN_DEFAULT_EMAIL=admin@teste.com' -e 'PGADMIN_DEFAULT_PASSWORD=admin' -p 80:80 -d dpage/pgadmin4
+
+### 2. Acessar o pgAdmin
+
+1. Acesse http://localhost:80 no seu navegador.
+2. Login: admin@teste.com | Senha: admin.
+3. Ao adicionar um novo servidor (Add New Server), use na aba Connection:
+* Host name/address: tecnologias-emergentes-db
+* Port: 5432
+* Username: postgres
+* Password: admin
+
+
+
+---
+
+## 📥 Como Baixar
+
 Clone o repositório usando o terminal:
+git clone [https://github.com/Lucas-d-Barbosa/tecnologias-emergentes-backend.git]()
+cd tecnologias-emergentes-backend
 
-Bash
-git clone git@github.com:Lucas-d-Barbosa/tecnologias-emergentes-backend.git OU git clone https://github.com/Lucas-d-Barbosa/tecnologias-emergentes-backend.git
-Entre na pasta do projeto (cd tecnologias-emergentes-backend)
-⚙️ Instalação e Compilação
-Para baixar as dependências e compilar o projeto, execute:
+## 🛠️ Instalação e Compilação
 
-Bash
+Para baixar as dependências e compilar o projeto:
 ./mvnw clean install
 (No Linux/Mac, se necessário, dê permissão de execução com chmod +x mvnw).
 
-🏃 Como Rodar
-Existem duas formas principais de subir a aplicação:
+## 🏃 Como Rodar
+
+A aplicação estará disponível em http://localhost:8080.
 
 1. Via Terminal (Rápido)
-   Bash
    ./mvnw spring-boot:run
 2. Via Jar (Modo Produção)
-   Bash
    ./mvnw package
    java -jar target/nome-do-projeto-0.0.1-SNAPSHOT.jar
-   A aplicação estará disponível em http://localhost:8080.
 
-🧪 Testando a API (Sem Nuvem)
-Para manter o desenvolvimento 100% local, recomendamos o uso do Bruno ou arquivos .http.
+## 🧪 Testando a API (Sem Nuvem)
 
-Usando o Bruno
-Abra o Bruno.
+Recomendamos o uso do Bruno ou arquivos .http para manter o desenvolvimento local.
 
-Clique em "Open Collection" e aponte para a pasta /bruno-queries (se disponível no projeto).
+### Usando o Bruno
 
-Ou crie uma nova requisição GET para http://localhost:8080/seu-endpoint.
+1. Abra o Bruno.
+2. Clique em "Open Collection" e aponte para a pasta /bruno-queries (se disponível no projeto).
+3. Ou crie uma nova requisição GET para http://localhost:8080/seu-endpoint.
 
-Usando cURL (Terminal)
-Bash
+### Usando cURL (Terminal)
+
 curl -X GET http://localhost:8080/api/exemplo
-📂 Estrutura de Pastas Principal
-src/main/java: Código fonte da aplicação.
 
-src/main/resources: Configurações (application.properties) e arquivos estáticos.
+## 📂 Estrutura de Pastas Principal
 
-src/test/java: Testes unitários e de integração.
+* src/main/java: Código fonte da aplicação.
+* src/main/resources: Configurações (application.properties) e arquivos estáticos.
+* src/test/java: Testes unitários e de integração.
