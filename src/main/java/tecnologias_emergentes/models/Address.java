@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.geo.Point;
 
+import java.util.List;
+
 
 @Entity
 @Table
@@ -31,4 +33,8 @@ public class Address {
 
     @Column
     private Integer houseNumber;
+
+    @Column
+    @OneToMany(mappedBy = "address")
+    private List<Customer> customers;
 }

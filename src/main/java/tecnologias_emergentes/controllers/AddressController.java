@@ -16,7 +16,7 @@ public class AddressController {
     private AddressService addressService;
 
     @GetMapping
-    public ResponseEntity<Page<Address>> findAll(@PageableDefault(size = 10) Pageable pageable){
+    public ResponseEntity<Page<Address>> findAll(@PageableDefault(size = 15) Pageable pageable){
         return addressService.findAll(pageable);
     }
 
