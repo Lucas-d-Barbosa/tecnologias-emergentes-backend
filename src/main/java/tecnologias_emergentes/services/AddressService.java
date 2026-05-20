@@ -33,15 +33,15 @@ public class AddressService {
         return ResponseEntity.status(201).body(addressRepository.save(address));
     }
 
-    public ResponseEntity<Address> update(Long id, AddressDTO address){
-        Optional<Address> addressToUpdate = addressRepository.findById(id);
-        if(addressToUpdate.isEmpty()) throw new RuntimeException("Address Not Found");
-        Address existingAddress = addressToUpdate.get();
-        existingAddress.setStreet(address.street());
-        existingAddress.setCity(address.city());
-        existingAddress.setHouseNumber(address.houseNumber());
-        existingAddress.setLatitude(address.latitude());
-        existingAddress.setLongitude(address.longitude());
+    public ResponseEntity<Address> update(Long id, AddressDTO addressDTO){
+        Address existingAddress = addressRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Address Not Found"));
+
+        existingAddress.setStreet(addressDTO.street());
+        existingAddress.setCity(addressDTO.city());
+        existingAddress.setHouseNumber(addressDTO.houseNumber());
+        existingAddress.setLatitude(addressDTO.latitude());   // Aqui ambos já serão BigDecimal
+        existingAddress.setLongitude(addressDTO.longitude()); // Aqui ambos já serão BigDecimal
         return ResponseEntity.ok().body(addressRepository.save(existingAddress));
     }
 

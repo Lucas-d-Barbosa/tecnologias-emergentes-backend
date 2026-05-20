@@ -2,33 +2,40 @@ package tecnologias_emergentes.models;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.geo.Point;
-
+import java.math.BigDecimal;
+import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
-@Table
+@Table(name = "address")
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Getter
 @Setter
 public class Address {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "address_id")
     private Long id;
 
-    @Column
-    private Point latitude;
+    @Column(nullable = false, precision = 9, scale = 6)
+    private BigDecimal latitude;
 
-    @Column
-    private  Point longitude;
+    @Column(nullable = false, precision = 9, scale = 6)
+    private BigDecimal longitude;
 
-    @Column
+    @Column(nullable = false, length = 120)
     private String city;
 
-    @Column
+    @Column(nullable = false, length = 120)
     private String street;
 
-    @Column
+    @Column(nullable = false, name = "number")
     private Integer houseNumber;
+
+    @OneToMany(mappedBy = "address", fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("address")
+    private List<Customer> customers;
 }

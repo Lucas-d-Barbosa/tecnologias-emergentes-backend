@@ -1,17 +1,16 @@
 package tecnologias_emergentes.dtos;
 
-import org.springframework.data.geo.Point;
 import tecnologias_emergentes.models.Address;
+import java.math.BigDecimal;
 
 public record AddressDTO(
-        Point latitude,
-        Point longitude,
+        BigDecimal latitude,
+        BigDecimal longitude,
         String city,
         String street,
-        Integer houseNumber)
-{
+        Integer houseNumber) {
 
-    public static Address mapperToAddress(AddressDTO dto){
+    public static Address mapperToAddress(AddressDTO dto) {
         return Address.builder()
                 .latitude(dto.latitude())
                 .longitude(dto.longitude())
@@ -21,7 +20,7 @@ public record AddressDTO(
                 .build();
     }
 
-    public static AddressDTO mapperToAddressDTO(Address address){
+    public static AddressDTO mapperToAddressDTO(Address address) {
         return new AddressDTO(
                 address.getLatitude(),
                 address.getLongitude(),
@@ -30,5 +29,4 @@ public record AddressDTO(
                 address.getHouseNumber()
         );
     }
-
 }
