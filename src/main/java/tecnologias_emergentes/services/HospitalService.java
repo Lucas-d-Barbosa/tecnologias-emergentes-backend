@@ -8,8 +8,9 @@ import org.springframework.stereotype.Service;
 import tecnologias_emergentes.dtos.HospitalDTO;
 import tecnologias_emergentes.models.Address;
 import tecnologias_emergentes.models.Hospital;
-import tecnologias_emergentes.repositories.AddressRepository;
 import tecnologias_emergentes.repositories.HospitalRepository;
+import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
 public class HospitalService {
@@ -18,7 +19,7 @@ public class HospitalService {
     private HospitalRepository hospitalRepository;
 
     @Autowired
-    private AddressRepository addressRepository;
+    private AddressService addressService;
 
     public ResponseEntity<Page<Hospital>> findAll(Pageable pageable) {
         return ResponseEntity.ok(hospitalRepository.findAll(pageable));
@@ -30,9 +31,13 @@ public class HospitalService {
         return ResponseEntity.ok(hospital);
     }
 
+    @Transactional
     public ResponseEntity<Hospital> save(HospitalDTO dto) {
-        Address address = addressRepository.findById(dto.addressId())
-                .orElseThrow(() -> new RuntimeException("Endereço associado não encontrado."));
+        if (dto.address() == null) {
+            throw new IllegalArgumentException("Os dados de endereço são obrigatórios.");
+        }
+
+        Address address = addressService.resolveOrCreate(dto.address());
 
         Hospital hospital = HospitalDTO.mapperToHospital(dto, address);
         return ResponseEntity.status(201).body(hospitalRepository.save(hospital));

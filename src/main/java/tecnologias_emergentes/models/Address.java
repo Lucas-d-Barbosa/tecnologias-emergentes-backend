@@ -7,7 +7,10 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
-@Table(name = "address")
+@Table(
+    name = "address",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"street", "number", "city"})
+)
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder

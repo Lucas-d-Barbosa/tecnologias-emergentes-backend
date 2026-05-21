@@ -10,11 +10,8 @@ import tecnologias_emergentes.dtos.AddressDTO;
 import tecnologias_emergentes.dtos.CustomerDTO;
 import tecnologias_emergentes.models.Address;
 import tecnologias_emergentes.models.Customer;
-import tecnologias_emergentes.repositories.AddressRepository;
 import tecnologias_emergentes.repositories.CustomerRepository;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 public class CustomerService {
@@ -23,7 +20,7 @@ public class CustomerService {
     private CustomerRepository customerRepository;
 
     @Autowired
-    private AddressRepository addressRepository;
+    private AddressService addressService;
 
     public ResponseEntity<Page<Customer>> findAll(Pageable page) {
         return ResponseEntity.ok(customerRepository.findAll(page));
@@ -42,13 +39,7 @@ public class CustomerService {
         }
 
         AddressDTO addrDto = customerDTO.address();
-
-        Address address = addressRepository
-                .findByStreetAndHouseNumberAndCity(addrDto.street(), addrDto.houseNumber(), addrDto.city())
-                .orElseGet(() -> {
-                    Address newAddress = AddressDTO.mapperToAddress(addrDto);
-                    return addressRepository.save(newAddress);
-                });
+        Address address = addressService.resolveOrCreate(addrDto);
 
         Customer customer = CustomerDTO.mapperToCustomer(customerDTO, address);
 
@@ -62,10 +53,8 @@ public class CustomerService {
 
         if (customerDTO.address() != null) {
             AddressDTO addrDto = customerDTO.address();
-            
-            Address address = addressRepository
-                    .findByStreetAndHouseNumberAndCity(addrDto.street(), addrDto.houseNumber(), addrDto.city())
-                    .orElseGet(() -> addressRepository.save(AddressDTO.mapperToAddress(addrDto)));
+
+            Address address = addressService.resolveOrCreate(addrDto);
             
             existingCustomer.setAddress(address);
         }

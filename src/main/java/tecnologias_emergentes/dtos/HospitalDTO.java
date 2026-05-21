@@ -6,7 +6,7 @@ import tecnologias_emergentes.models.Hospital;
 public record HospitalDTO(
         String categoryName,
         String categoryType,
-        Long addressId
+    AddressDTO address
 ) {
     public static Hospital mapperToHospital(HospitalDTO dto, Address address) {
         return Hospital.builder()
@@ -14,5 +14,13 @@ public record HospitalDTO(
                 .categoryType(dto.categoryType())
                 .address(address)
                 .build();
+    }
+
+    public static HospitalDTO mapperToHospitalDTO(Hospital hospital){
+        return new HospitalDTO(
+                hospital.getCategoryName(),
+                hospital.getCategoryType(),
+                hospital.getAddress() != null ? AddressDTO.mapperToAddressDTO(hospital.getAddress()) : null
+        );
     }
 }

@@ -2,16 +2,17 @@ package tecnologias_emergentes.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import tecnologias_emergentes.dtos.AddressDTO;
-import tecnologias_emergentes.dtos.AddressDTO.*;
 import tecnologias_emergentes.models.Address;
 import tecnologias_emergentes.repositories.AddressRepository;
+
 import java.util.Optional;
+
 import static tecnologias_emergentes.dtos.AddressDTO.mapperToAddress;
+
 @Service
 public class AddressService {
     @Autowired
@@ -31,6 +32,12 @@ public class AddressService {
     public ResponseEntity<Address> save(AddressDTO addressDTO){
         Address address = mapperToAddress(addressDTO);
         return ResponseEntity.status(201).body(addressRepository.save(address));
+    }
+
+    public Address resolveOrCreate(AddressDTO addressDTO) {
+        return addressRepository
+                .findByStreetAndHouseNumberAndCity(addressDTO.street(), addressDTO.houseNumber(), addressDTO.city())
+                .orElseGet(() -> addressRepository.save(mapperToAddress(addressDTO)));
     }
 
     public ResponseEntity<Address> update(Long id, AddressDTO addressDTO){
