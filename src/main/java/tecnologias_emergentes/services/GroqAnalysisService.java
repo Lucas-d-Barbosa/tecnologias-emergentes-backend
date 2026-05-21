@@ -39,13 +39,13 @@ public class GroqAnalysisService {
         }
 
         try {
-            String prompt = "Você é um médico que avalia hemogramas. Analise de forma objetiva e concisa este JSON e entregue apenas a observação clínica em português: "
+            String prompt = "Você é um médico que avalia hemogramas. Analise de forma objetiva e concisa este JSON e entregue a observação clínica em português, citando possíveis pontos de atenção, parabenizando quando o paciente tiver um bom resultado de saúde e dando dicas caso tenha algum risco de passar mal ou de vida, inclusive indicando quais seriam os valores normais e seguros: "
                     + objectMapper.writeValueAsString(examData);
 
             String requestBody = objectMapper.writeValueAsString(new GroqChatRequest(
                     model,
                     new GroqMessage[]{
-                            new GroqMessage("system", "Você é um médico especialista em hemogramas. Seja técnico, objetivo e sucinto."),
+                            new GroqMessage("system", "Você é um médico especialista em hemogramas. Seja técnico, objetivo e sucinto. Tenha um tom amigável mas cordial e educado, como um médico bem atencioso e empático"),
                             new GroqMessage("user", prompt)
                     },
                     0.2

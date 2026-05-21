@@ -92,11 +92,53 @@ public class ExamService {
         return ResponseEntity.ok(examRepository.findNormalExamsReport(pageable));
     }
 
-    private ExamData generateRandomHemogramData() {
-        double rbc = randomInRange(4.1, 6.0);
-        double hemoglobin = randomInRange(12.0, 17.5);
-        double wbc = randomInRange(4500, 11000);
-        int platelets = ThreadLocalRandom.current().nextInt(150_000, 450_001);
+    private ExamData generateRandomHemogramData() {       
+        double rbc;
+        double hemoglobin;
+        double wbc;
+        int platelets;
+        
+        // 20% chance to generate abnormal/risk values
+        if (ThreadLocalRandom.current().nextDouble() < 0.2) {
+            int riskType = ThreadLocalRandom.current().nextInt(4);
+            switch (riskType) {
+                case 0: // Severe anemia
+                    rbc = randomInRange(1.8, 3.5);
+                    hemoglobin = randomInRange(5.0, 10.0);
+                    wbc = randomInRange(4500, 11000);
+                    platelets = ThreadLocalRandom.current().nextInt(150_000, 450_001);
+                    break;
+                case 1: // Leukopenia (low WBC) - infection risk
+                    rbc = randomInRange(4.1, 6.0);
+                    hemoglobin = randomInRange(12.0, 17.5);
+                    wbc = randomInRange(1500, 3500);
+                    platelets = ThreadLocalRandom.current().nextInt(150_000, 450_001);
+                    break;
+                case 2: // Leukocytosis (high WBC) - infection/leukemia risk
+                    rbc = randomInRange(4.1, 6.0);
+                    hemoglobin = randomInRange(12.0, 17.5);
+                    wbc = randomInRange(15000, 25000);
+                    platelets = ThreadLocalRandom.current().nextInt(150_000, 450_001);
+                    break;
+                case 3: // Thrombocytopenia (low platelets) - bleeding risk
+                    rbc = randomInRange(4.1, 6.0);
+                    hemoglobin = randomInRange(12.0, 17.5);
+                    wbc = randomInRange(4500, 11000);
+                    platelets = ThreadLocalRandom.current().nextInt(20_000, 80_000);
+                    break;
+                default:
+                    rbc = randomInRange(4.1, 6.0);
+                    hemoglobin = randomInRange(12.0, 17.5);
+                    wbc = randomInRange(4500, 11000);
+                    platelets = ThreadLocalRandom.current().nextInt(150_000, 450_001);
+            }
+        } else {
+            // Normal values
+            rbc = randomInRange(4.1, 6.0);
+            hemoglobin = randomInRange(12.0, 17.5);
+            wbc = randomInRange(4500, 11000);
+            platelets = ThreadLocalRandom.current().nextInt(150_000, 450_001);
+        }
 
         return new ExamData(
                 new Erythrogram(
