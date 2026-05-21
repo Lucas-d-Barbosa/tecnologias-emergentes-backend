@@ -5,11 +5,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import tecnologias_emergentes.dtos.AddressDTO;
 import tecnologias_emergentes.dtos.CustomerDTO;
 import tecnologias_emergentes.models.Address;
 import tecnologias_emergentes.models.Customer;
 import tecnologias_emergentes.repositories.AddressRepository;
 import tecnologias_emergentes.repositories.CustomerRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -32,29 +35,38 @@ public class CustomerService {
         return ResponseEntity.ok(customer);
     }
 
+    @Transactional
     public ResponseEntity<Customer> save(CustomerDTO customerDTO) {
-        // 1. Valida se o ID do endereço foi enviado no JSON
-        if (customerDTO.addressId() == null) {
-            throw new IllegalArgumentException("O campo 'addressId' é obrigatório.");
+        if (customerDTO.address() == null) {
+            throw new IllegalArgumentException("Os dados de endereço são obrigatórios.");
         }
 
-        // 2. Busca o endereço correspondente no banco de dados
-        Address address = addressRepository.findById(customerDTO.addressId())
-                .orElseThrow(() -> new RuntimeException("Address Not Found to associate with customer"));
+        AddressDTO addrDto = customerDTO.address();
 
-        // CORREÇÃO AQUI: Passamos o customerDTO E o address (os dois parâmetros exigidos)
+        Address address = addressRepository
+                .findByStreetAndHouseNumberAndCity(addrDto.street(), addrDto.houseNumber(), addrDto.city())
+                .orElseGet(() -> {
+                    Address newAddress = AddressDTO.mapperToAddress(addrDto);
+                    return addressRepository.save(newAddress);
+                });
+
         Customer customer = CustomerDTO.mapperToCustomer(customerDTO, address);
 
         return ResponseEntity.status(201).body(customerRepository.save(customer));
     }
 
+    @Transactional
     public ResponseEntity<Customer> update(Long id, CustomerDTO customerDTO) {
         Customer existingCustomer = customerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Customer Not Found"));
 
-        if (customerDTO.addressId() != null) {
-            Address address = addressRepository.findById(customerDTO.addressId())
-                    .orElseThrow(() -> new RuntimeException("Address Not Found"));
+        if (customerDTO.address() != null) {
+            AddressDTO addrDto = customerDTO.address();
+            
+            Address address = addressRepository
+                    .findByStreetAndHouseNumberAndCity(addrDto.street(), addrDto.houseNumber(), addrDto.city())
+                    .orElseGet(() -> addressRepository.save(AddressDTO.mapperToAddress(addrDto)));
+            
             existingCustomer.setAddress(address);
         }
 

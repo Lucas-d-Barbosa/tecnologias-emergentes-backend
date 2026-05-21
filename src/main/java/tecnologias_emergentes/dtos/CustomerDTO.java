@@ -8,7 +8,7 @@ public record CustomerDTO(
         String name,
         String email,
         CustomerClass customerClass,
-        Long addressId // Certifique-se de que está escrito exatamente assim
+        AddressDTO address 
 ) {
     public static Customer mapperToCustomer(CustomerDTO customerDTO, Address address){
         return Customer.builder()
@@ -24,7 +24,7 @@ public record CustomerDTO(
                 customer.getName(),
                 customer.getEmail(),
                 customer.getCustomerClass(),
-                customer.getAddress() != null ? customer.getAddress().getId() : null
+                customer.getAddress() != null ? AddressDTO.mapperToAddressDTO(customer.getAddress()) : null
         );
     }
 }
