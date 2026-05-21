@@ -99,7 +99,7 @@ public class ExamService {
         int platelets;
         
         // 20% chance to generate abnormal/risk values
-        if (ThreadLocalRandom.current().nextDouble() < 0.8) {
+        if (ThreadLocalRandom.current().nextDouble() < 1.0) {
             int riskType = ThreadLocalRandom.current().nextInt(4);
             switch (riskType) {
                 case 0: // Severe anemia
