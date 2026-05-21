@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import tecnologias_emergentes.dtos.AddressDTO;
+import tecnologias_emergentes.exceptions.ResourceNotFoundException;
 import tecnologias_emergentes.models.Address;
 import tecnologias_emergentes.repositories.AddressRepository;
 
@@ -25,7 +26,7 @@ public class AddressService {
 
     public ResponseEntity<Address> findById(Long id){
         Optional<Address> address = addressRepository.findById(id);
-        if(address.isEmpty()) throw new RuntimeException("Address Not Found");
+        if(address.isEmpty()) throw new ResourceNotFoundException("Endereço não encontrado.");
         return ResponseEntity.ok().body(address.get());
     }
 
@@ -42,7 +43,7 @@ public class AddressService {
 
     public ResponseEntity<Address> update(Long id, AddressDTO addressDTO){
         Address existingAddress = addressRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Address Not Found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Endereço não encontrado."));
 
         existingAddress.setStreet(addressDTO.street());
         existingAddress.setCity(addressDTO.city());
@@ -54,7 +55,7 @@ public class AddressService {
 
     public ResponseEntity<Void> delete(Long id){
         Optional<Address> address = addressRepository.findById(id);
-        if(address.isEmpty()) throw new RuntimeException("Address Not Found");
+        if(address.isEmpty()) throw new ResourceNotFoundException("Endereço não encontrado.");
         addressRepository.delete(address.get());
         return  ResponseEntity.noContent().build();
     }

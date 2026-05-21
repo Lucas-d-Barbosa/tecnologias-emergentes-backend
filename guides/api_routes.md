@@ -188,6 +188,42 @@ Body:
 ### `GET /exam/reports/normal`
 Relatório de exames normais.
 
+### `GET /exam/customer/{customerId}/hemogram`
+Busca o hemograma automático do cliente.
+
+Comportamento:
+- `STANDARD` / classe básica: retorna somente os dados estruturados do exame.
+- `PREMIUM`: consulta o Groq com os dados do exame e retorna os mesmos dados com o campo `observation` preenchido.
+
+Resposta `200`:
+```json
+{
+  "examId": 10,
+  "customerId": 1,
+  "customerClass": "PREMIUM",
+  "examData": {
+    "erythrogram": {
+      "rbc": { "value": 4.8, "unit": "10^6/µL", "ref": "4.1-6.0" },
+      "hemoglobin": { "value": 14.2, "unit": "g/dL", "ref": "12.0-17.5" }
+    },
+    "leukogram": {
+      "wbc_total": { "value": 7200, "unit": "/µL", "ref": "4500-11000" }
+    },
+    "platelets": { "count": 230000 }
+  },
+  "observation": "Hemograma dentro da normalidade clínica."
+}
+```
+
+Se a `GROQ_API_KEY` não estiver configurada, o endpoint premium ainda retorna o exame e preenche `observation` com uma mensagem de indisponibilidade.
+
+## Groq
+
+Variáveis de ambiente usadas pela análise premium:
+- `GROQ_API_KEY`
+- `GROQ_MODEL` opcional
+- `GROQ_BASE_URL` opcional
+
 ## Schedule
 
 ### `GET /schedule`

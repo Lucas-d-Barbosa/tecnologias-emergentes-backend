@@ -1,0 +1,86 @@
+package tecnologias_emergentes.services;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import tecnologias_emergentes.models.records.ExamData;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+@Service
+public class GroqAnalysisService {
+
+    private final ObjectMapper objectMapper;
+    private final HttpClient httpClient;
+
+    @Value("${groq.api-key:}")
+    private String apiKey;
+
+    @Value("${groq.model:llama-3.3-70b-versatile}")
+    private String model;
+
+    @Value("${groq.base-url:https://api.groq.com/openai/v1/chat/completions}")
+    private String baseUrl;
+
+    public GroqAnalysisService(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+        this.httpClient = HttpClient.newHttpClient();
+    }
+
+    public String analyzeHemogram(ExamData examData) {
+        if (apiKey == null || apiKey.isBlank()) {
+            return "Análise premium indisponível: configure a variável GROQ_API_KEY para habilitar o laudo do Groq.";
+        }
+
+        try {
+            String prompt = "Você é um médico que avalia hemogramas. Analise de forma objetiva e concisa este JSON e entregue apenas a observação clínica em português: "
+                    + objectMapper.writeValueAsString(examData);
+
+            String requestBody = objectMapper.writeValueAsString(new GroqChatRequest(
+                    model,
+                    new GroqMessage[]{
+                            new GroqMessage("system", "Você é um médico especialista em hemogramas. Seja técnico, objetivo e sucinto."),
+                            new GroqMessage("user", prompt)
+                    },
+                    0.2
+            ));
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(baseUrl))
+                    .header("Authorization", "Bearer " + apiKey)
+                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                throw new IllegalStateException("Erro ao consultar Groq: HTTP " + response.statusCode());
+            }
+
+            JsonNode root = objectMapper.readTree(response.body());
+            JsonNode content = root.path("choices").path(0).path("message").path("content");
+            if (content.isMissingNode() || content.asText().isBlank()) {
+                throw new IllegalStateException("Groq retornou resposta vazia.");
+            }
+
+            return content.asText().trim();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return "Análise premium indisponível no momento devido a interrupção da requisição ao Groq.";
+        } catch (IOException | RuntimeException e) {
+            return "Análise premium indisponível no momento. O exame foi retornado normalmente, mas sem avaliação do Groq.";
+        }
+    }
+
+    private record GroqChatRequest(String model, GroqMessage[] messages, double temperature) {
+    }
+
+    private record GroqMessage(String role, String content) {
+    }
+}

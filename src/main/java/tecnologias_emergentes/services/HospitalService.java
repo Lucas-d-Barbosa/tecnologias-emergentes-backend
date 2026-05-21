@@ -6,6 +6,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import tecnologias_emergentes.dtos.HospitalDTO;
+import tecnologias_emergentes.exceptions.BusinessRuleException;
+import tecnologias_emergentes.exceptions.ResourceNotFoundException;
 import tecnologias_emergentes.models.Address;
 import tecnologias_emergentes.models.Hospital;
 import tecnologias_emergentes.repositories.HospitalRepository;
@@ -27,14 +29,14 @@ public class HospitalService {
 
     public ResponseEntity<Hospital> findById(Long id) {
         Hospital hospital = hospitalRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Hospital não encontrado."));
+                .orElseThrow(() -> new ResourceNotFoundException("Hospital não encontrado."));
         return ResponseEntity.ok(hospital);
     }
 
     @Transactional
     public ResponseEntity<Hospital> save(HospitalDTO dto) {
         if (dto.address() == null) {
-            throw new IllegalArgumentException("Os dados de endereço são obrigatórios.");
+            throw new BusinessRuleException("Os dados de endereço são obrigatórios para cadastrar um hospital.");
         }
 
         Address address = addressService.resolveOrCreate(dto.address());
@@ -45,7 +47,7 @@ public class HospitalService {
 
     public ResponseEntity<Void> delete(Long id) {
         Hospital hospital = hospitalRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Hospital não encontrado."));
+                .orElseThrow(() -> new ResourceNotFoundException("Hospital não encontrado."));
         hospitalRepository.delete(hospital);
         return ResponseEntity.noContent().build();
     }

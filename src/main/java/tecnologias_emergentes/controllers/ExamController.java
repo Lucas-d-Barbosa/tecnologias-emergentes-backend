@@ -7,6 +7,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tecnologias_emergentes.dtos.ExamDTO;
+import tecnologias_emergentes.dtos.HemogramResponseDTO;
 import tecnologias_emergentes.models.Exam;
 import tecnologias_emergentes.services.ExamService;
 import tecnologias_emergentes.repositories.ExamRepository.ExamReportProjection;
@@ -31,6 +32,11 @@ public class ExamController {
     @PostMapping
     public ResponseEntity<Exam> save(@RequestBody ExamDTO examDTO) {
         return examService.save(examDTO);
+    }
+
+    @GetMapping("/customer/{customerId}/hemogram")
+    public ResponseEntity<HemogramResponseDTO> getCustomerHemogram(@PathVariable Long customerId) {
+        return examService.getCustomerHemogram(customerId);
     }
 
     // Endpoint para extrair o relatório nativo direto da estrutura JSONB
