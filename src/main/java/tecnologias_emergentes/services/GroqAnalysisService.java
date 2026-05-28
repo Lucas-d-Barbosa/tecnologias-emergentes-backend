@@ -33,22 +33,40 @@ public class GroqAnalysisService {
         this.httpClient = HttpClient.newHttpClient();
     }
 
-    public String analyzeHemogram(ExamData examData) {
+    public String analyzeHemogram(ExamData examData, String perfilPaciente) {
         if (apiKey == null || apiKey.isBlank()) {
             return "Análise premium indisponível: configure a variável GROQ_API_KEY para habilitar o laudo do Groq.";
         }
 
         try {
-            String prompt = "Você é um médico que avalia hemogramas. Analise de forma objetiva e concisa este JSON e entregue a observação clínica em português, citando possíveis pontos de atenção, parabenizando quando o paciente tiver um bom resultado de saúde e dando dicas caso tenha algum risco de passar mal ou de vida, inclusive indicando quais seriam os valores normais e seguros: "
+            String diretrizAtendimento = "premium".equalsIgnoreCase(perfilPaciente)
+                    ? "O paciente é um cliente VIP de altíssimo poder aquisitivo (plano Premium). Ofereça um atendimento estilo 'concierge médico'. Recomende acompanhamento em clínicas particulares de luxo, exames preventivos de alta tecnologia, nutricionistas renomados e suplementação de ponta importada. O tom deve ser extremamente solícito, exclusivo, deferente e focado em otimização de performance e longevidade."
+                    : "O paciente possui o plano básico e baixo poder aquisitivo. O atendimento deve ser estritamente focado no essencial, resolvendo o problema de forma pragmática e mais rápida. Para melhoria de saúde, limite-se a sugerir mudanças gratuitas (como caminhadas na rua e beber água) e alimentação acessível (itens básicos de feira e mercado). Se houver riscos, oriente o paciente a buscar a Unidade Básica de Saúde (UBS) do seu bairro ou um clínico geral do SUS para acompanhamento.";
+
+            String systemPrompt = """
+                    Você é um médico hematologista analisando um hemograma. Seu parecer será lido diretamente pelo paciente.
+                    
+                    DIRETRIZ OBRIGATÓRIA DE ATENDIMENTO:
+                    %s
+                    
+                    REGRAS GERAIS DE COMUNICAÇÃO:
+                    1. Escreva em formato de texto normal. É estritamente proibido usar markdown (não use asteriscos, negritos ou hashtags). Evite caracteres especiais.
+                    2. Trate o paciente como alguém instruído, mas que não tem conhecimento médico. Não use jargões sem explicá-los de forma didática.
+                    3. Se os resultados forem excelentes, parabenize o paciente.
+                    4. Se houver resultados preocupantes, explique claramente o que pode estar acontecendo, quais são os valores normais para aquela métrica e explique as consequências da possível doença.
+                    5. Forneça dicas de saúde que estejam rigorosamente alinhadas com a 'DIRETRIZ OBRIGATÓRIA DE ATENDIMENTO' descrita acima.
+                    """.formatted(diretrizAtendimento);
+
+            String userPrompt = "Analise de forma objetiva e concisa este JSON e entregue a observação clínica em português, citando possíveis pontos de atenção: "
                     + objectMapper.writeValueAsString(examData);
 
             String requestBody = objectMapper.writeValueAsString(new GroqChatRequest(
                     model,
                     new GroqMessage[]{
-                            new GroqMessage("system", "Você é um médico especialista em hemogramas. Seu parecer será lido diretamente pelo paciente, portanto elabore o texto como uma conversa direta com o paciete. Seja objetivo e sucinto. Tenha um tom amigável mas cordial e educado, como um médico bem atencioso e empático. Você não deve responder como markdown, mas como um texto formatado normalmente. Evite caracteres especiais. Trate o cliente como alguém instruído, mas que não tem conhecimento médico. Seja claro e didático, mas sem ser prolixo. Se o exame tiver resultados excelentes, parabenize o paciente. Se tiver algum resultado preocupante, explique de forma clara o que pode estar acontecendo e quais são os valores normais para aquela métrica, dando dicas de como melhorar a saúde caso haja algum risco. Caso o paciente apresente qualquer sinal de doença ou um algum ponto de atenção, se for citar uma doneça você deve explicar o que essa doença causa. Você deve entregar um texto que seja fácil de ler e entender, mas que contenha todas as informações relevantes para o paciente entender seu exame. Evite usar jargões médicos sem explicação. Seja claro e direto, mas sempre com um tom amigável e empático."),
-                            new GroqMessage("user", prompt)
+                            new GroqMessage("system", systemPrompt),
+                            new GroqMessage("user", userPrompt)
                     },
-                    0.2
+                    0.2 
             ));
 
             HttpRequest request = HttpRequest.newBuilder()
@@ -70,6 +88,7 @@ public class GroqAnalysisService {
             }
 
             return content.asText().trim();
+            
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return "Análise premium indisponível no momento devido a interrupção da requisição ao Groq.";
@@ -78,9 +97,6 @@ public class GroqAnalysisService {
         }
     }
 
-    private record GroqChatRequest(String model, GroqMessage[] messages, double temperature) {
-    }
-
-    private record GroqMessage(String role, String content) {
-    }
+    private record GroqChatRequest(String model, GroqMessage[] messages, double temperature) {}
+    private record GroqMessage(String role, String content) {}
 }

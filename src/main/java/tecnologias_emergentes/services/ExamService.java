@@ -73,7 +73,10 @@ public class ExamService {
 
         String observation = null;
         if (customer.getCustomerClass() == CustomerClass.PREMIUM) {
-            observation = groqAnalysisService.analyzeHemogram(exam.getExamData());
+            observation = groqAnalysisService.analyzeHemogram(
+                    exam.getExamData(),
+                    customer.getCustomerClass().getDescription()
+            );
         }
 
         HemogramResponseDTO response = new HemogramResponseDTO(
@@ -87,7 +90,6 @@ public class ExamService {
         return ResponseEntity.ok(response);
     }
 
-    // Retorna o relatório nativo direto do banco (Requisito 4)
     public ResponseEntity<Page<ExamReportProjection>> getNormalExamsReport(Pageable pageable) {
         return ResponseEntity.ok(examRepository.findNormalExamsReport(pageable));
     }
@@ -98,29 +100,28 @@ public class ExamService {
         double wbc;
         int platelets;
         
-        // 20% chance to generate abnormal/risk values
         if (ThreadLocalRandom.current().nextDouble() < 1.0) {
             int riskType = ThreadLocalRandom.current().nextInt(4);
             switch (riskType) {
-                case 0: // Severe anemia
+                case 0:
                     rbc = randomInRange(1.8, 3.5);
                     hemoglobin = randomInRange(5.0, 10.0);
                     wbc = randomInRange(4500, 11000);
                     platelets = ThreadLocalRandom.current().nextInt(150_000, 450_001);
                     break;
-                case 1: // Leukopenia (low WBC) - infection risk
+                case 1: 
                     rbc = randomInRange(4.1, 6.0);
                     hemoglobin = randomInRange(12.0, 17.5);
                     wbc = randomInRange(1500, 3500);
                     platelets = ThreadLocalRandom.current().nextInt(150_000, 450_001);
                     break;
-                case 2: // Leukocytosis (high WBC) - infection/leukemia risk
+                case 2:
                     rbc = randomInRange(4.1, 6.0);
                     hemoglobin = randomInRange(12.0, 17.5);
                     wbc = randomInRange(15000, 25000);
                     platelets = ThreadLocalRandom.current().nextInt(150_000, 450_001);
                     break;
-                case 3: // Thrombocytopenia (low platelets) - bleeding risk
+                case 3: 
                     rbc = randomInRange(4.1, 6.0);
                     hemoglobin = randomInRange(12.0, 17.5);
                     wbc = randomInRange(4500, 11000);
@@ -133,7 +134,6 @@ public class ExamService {
                     platelets = ThreadLocalRandom.current().nextInt(150_000, 450_001);
             }
         } else {
-            // Normal values
             rbc = randomInRange(4.1, 6.0);
             hemoglobin = randomInRange(12.0, 17.5);
             wbc = randomInRange(4500, 11000);
