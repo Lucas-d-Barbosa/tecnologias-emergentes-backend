@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tecnologias_emergentes.dtos.AutoScheduleResponseDTO;
 import tecnologias_emergentes.dtos.ScheduleDTO;
 import tecnologias_emergentes.models.Schedule;
 import tecnologias_emergentes.services.ScheduleService;
@@ -32,5 +33,10 @@ public class ScheduleController {
     @GetMapping("/reports")
     public ResponseEntity<Page<ScheduleReportProjection>> getSchedulesReport(@PageableDefault(size = 15) Pageable pageable) {
         return scheduleService.getSchedulesReport(pageable);
+    }
+
+    @GetMapping("/customer/{customerId}/latest")
+    public ResponseEntity<AutoScheduleResponseDTO> getLatestScheduleForCustomer(@PathVariable Long customerId) {
+        return scheduleService.getLatestScheduleForCustomer(customerId);
     }
 }

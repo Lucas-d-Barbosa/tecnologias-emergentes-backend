@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tecnologias_emergentes.dtos.CustomerCreateResponseDTO;
 import tecnologias_emergentes.dtos.CustomerDTO;
 import tecnologias_emergentes.models.Customer;
 import tecnologias_emergentes.services.CustomerService;
@@ -28,7 +29,7 @@ public class CustomerController {
     }
 
     @PostMapping
-    public ResponseEntity<Customer> save(@RequestBody CustomerDTO customerDTO) {
+    public ResponseEntity<CustomerCreateResponseDTO> save(@RequestBody CustomerDTO customerDTO) {
         return customerService.save(customerDTO);
     }
 

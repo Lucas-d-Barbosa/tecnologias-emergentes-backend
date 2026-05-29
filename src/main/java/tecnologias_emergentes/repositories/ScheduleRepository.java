@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import tecnologias_emergentes.models.Schedule;
+import java.util.Optional;
 
 @Repository
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
@@ -24,6 +25,8 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             countQuery = "SELECT count(*) FROM schedule",
             nativeQuery = true)
     Page<ScheduleReportProjection> findSchedulesReport(Pageable pageable);
+
+    Optional<Schedule> findFirstByCustomer_IdOrderByScheduledAtDesc(Long customerId);
 
     // Projeção para capturar o resultado do relatório de agendamentos
     interface ScheduleReportProjection {

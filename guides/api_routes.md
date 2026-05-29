@@ -94,6 +94,7 @@ Busca cliente por id.
 
 ### `POST /customer`
 Cria cliente e reaproveita endereço se ele já existir por `street + houseNumber + city`.
+Para clientes `PREMIUM`, também gera hemograma e agenda um atendimento automaticamente.
 
 Body:
 ```json
@@ -112,6 +113,49 @@ Body:
 ```
 
 Resposta `201`: cliente criado com o endereço vinculado.
+
+Resposta `201` (com agendamento automatico para PREMIUM):
+```json
+{
+  "id": 1,
+  "name": "Hans Oliveira",
+  "email": "hans@dev.com",
+  "customerClass": "PREMIUM",
+  "address": {
+    "latitude": -7.237142,
+    "longitude": -39.412403,
+    "city": "Juazeiro do Norte",
+    "street": "Av. Padre Cicero",
+    "houseNumber": 2000
+  },
+  "autoSchedule": {
+    "scheduleId": 101,
+    "serviceCode": 1001,
+    "scheduledAt": "2026-05-29T09:00:00-03:00",
+    "customerId": 1,
+    "customerName": "Hans Oliveira",
+    "customerClass": "PREMIUM",
+    "customerAddress": {
+      "latitude": -7.237142,
+      "longitude": -39.412403,
+      "city": "Juazeiro do Norte",
+      "street": "Av. Padre Cicero",
+      "houseNumber": 2000
+    },
+    "hospitalId": 2,
+    "hospitalName": "Hospital Regional do Cariri",
+    "hospitalType": "Publico",
+    "hospitalAddress": {
+      "latitude": -7.22984,
+      "longitude": -39.29718,
+      "city": "Juazeiro do Norte",
+      "street": "Rua Catulo da Paixao Cearense",
+      "houseNumber": 219
+    }
+  }
+}
+```
+Para clientes STANDARD, o campo `autoSchedule` vem como null.
 
 ### `PUT /customer/{id}`
 Atualiza cliente.
@@ -244,3 +288,35 @@ Body:
 
 ### `GET /schedule/reports`
 Relatório de agendamentos em ordem de data.
+
+### `GET /schedule/customer/{customerId}/latest`
+Busca o ultimo agendamento do cliente, incluindo o hospital e os enderecos.
+
+Resposta `200`:
+```json
+{
+  "scheduleId": 101,
+  "serviceCode": 1001,
+  "scheduledAt": "2026-05-29T09:00:00-03:00",
+  "customerId": 1,
+  "customerName": "Hans Oliveira",
+  "customerClass": "PREMIUM",
+  "customerAddress": {
+    "latitude": -7.237142,
+    "longitude": -39.412403,
+    "city": "Juazeiro do Norte",
+    "street": "Av. Padre Cicero",
+    "houseNumber": 2000
+  },
+  "hospitalId": 2,
+  "hospitalName": "Hospital Regional do Cariri",
+  "hospitalType": "Publico",
+  "hospitalAddress": {
+    "latitude": -7.22984,
+    "longitude": -39.29718,
+    "city": "Juazeiro do Norte",
+    "street": "Rua Catulo da Paixao Cearense",
+    "houseNumber": 219
+  }
+}
+```

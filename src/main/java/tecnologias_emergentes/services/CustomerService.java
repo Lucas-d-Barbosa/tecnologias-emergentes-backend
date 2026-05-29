@@ -7,11 +7,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import tecnologias_emergentes.dtos.AddressDTO;
+import tecnologias_emergentes.dtos.CustomerCreateResponseDTO;
 import tecnologias_emergentes.dtos.CustomerDTO;
+import tecnologias_emergentes.enums.CustomerClass;
 import tecnologias_emergentes.exceptions.BusinessRuleException;
 import tecnologias_emergentes.exceptions.ResourceNotFoundException;
 import tecnologias_emergentes.models.Address;
 import tecnologias_emergentes.models.Customer;
+import tecnologias_emergentes.models.Schedule;
 import tecnologias_emergentes.repositories.CustomerRepository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +30,9 @@ public class CustomerService {
     @Autowired
     private ExamService examService;
 
+    @Autowired
+    private ScheduleService scheduleService;
+
     public ResponseEntity<Page<Customer>> findAll(Pageable page) {
         return ResponseEntity.ok(customerRepository.findAll(page));
     }
@@ -38,7 +44,7 @@ public class CustomerService {
     }
 
     @Transactional
-    public ResponseEntity<Customer> save(CustomerDTO customerDTO) {
+    public ResponseEntity<CustomerCreateResponseDTO> save(CustomerDTO customerDTO) {
         if (customerDTO.address() == null) {
             throw new BusinessRuleException("Os dados de endereço são obrigatórios para cadastrar um cliente.");
         }
@@ -51,7 +57,12 @@ public class CustomerService {
         Customer savedCustomer = customerRepository.save(customer);
         examService.createAutomaticHemogram(savedCustomer);
 
-        return ResponseEntity.status(201).body(savedCustomer);
+        Schedule schedule = null;
+        if (savedCustomer.getCustomerClass() == CustomerClass.PREMIUM) {
+            schedule = scheduleService.createAutomaticScheduleForCustomer(savedCustomer);
+        }
+
+        return ResponseEntity.status(201).body(CustomerCreateResponseDTO.from(savedCustomer, schedule));
     }
 
     @Transactional
