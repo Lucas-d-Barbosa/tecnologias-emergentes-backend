@@ -1,6 +1,6 @@
 package tecnologias_emergentes.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -24,16 +24,12 @@ import tecnologias_emergentes.repositories.ExamRepository.ExamReportProjection;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
+@RequiredArgsConstructor
 public class ExamService {
 
-    @Autowired
-    private ExamRepository examRepository;
-
-    @Autowired
-    private CustomerRepository customerRepository;
-
-    @Autowired
-    private GroqAnalysisService groqAnalysisService;
+    private final ExamRepository examRepository;
+    private final CustomerRepository customerRepository;
+    private final GroqAnalysisService groqAnalysisService;
 
     public ResponseEntity<Page<Exam>> findAll(Pageable pageable) {
         return ResponseEntity.ok(examRepository.findAll(pageable));
@@ -96,50 +92,23 @@ public class ExamService {
         return ResponseEntity.ok(examRepository.findNormalExamsReport(pageable));
     }
 
-    private ExamData generateRandomHemogramData() {       
-        double rbc;
-        double hemoglobin;
-        double wbc;
-        int platelets;
-        
-        if (ThreadLocalRandom.current().nextDouble() < 1.0) {
-            int riskType = ThreadLocalRandom.current().nextInt(4);
-            switch (riskType) {
-                case 0:
-                    rbc = randomInRange(1.8, 3.5);
-                    hemoglobin = randomInRange(5.0, 10.0);
-                    wbc = randomInRange(4500, 11000);
-                    platelets = ThreadLocalRandom.current().nextInt(150_000, 450_001);
-                    break;
-                case 1: 
-                    rbc = randomInRange(4.1, 6.0);
-                    hemoglobin = randomInRange(12.0, 17.5);
-                    wbc = randomInRange(1500, 3500);
-                    platelets = ThreadLocalRandom.current().nextInt(150_000, 450_001);
-                    break;
-                case 2:
-                    rbc = randomInRange(4.1, 6.0);
-                    hemoglobin = randomInRange(12.0, 17.5);
-                    wbc = randomInRange(15000, 25000);
-                    platelets = ThreadLocalRandom.current().nextInt(150_000, 450_001);
-                    break;
-                case 3: 
-                    rbc = randomInRange(4.1, 6.0);
-                    hemoglobin = randomInRange(12.0, 17.5);
-                    wbc = randomInRange(4500, 11000);
-                    platelets = ThreadLocalRandom.current().nextInt(20_000, 80_000);
-                    break;
-                default:
-                    rbc = randomInRange(4.1, 6.0);
-                    hemoglobin = randomInRange(12.0, 17.5);
-                    wbc = randomInRange(4500, 11000);
-                    platelets = ThreadLocalRandom.current().nextInt(150_000, 450_001);
+    // Gera sempre um cenario com pelo menos um componente alterado (anormal),
+    // sorteando qual eixo do hemograma estara fora da faixa de referencia.
+    private ExamData generateRandomHemogramData() {
+        double rbc = randomInRange(4.1, 6.0);
+        double hemoglobin = randomInRange(12.0, 17.5);
+        double wbc = randomInRange(4500, 11000);
+        int platelets = ThreadLocalRandom.current().nextInt(150_000, 450_001);
+
+        int riskType = ThreadLocalRandom.current().nextInt(4);
+        switch (riskType) {
+            case 0 -> {
+                rbc = randomInRange(1.8, 3.5);
+                hemoglobin = randomInRange(5.0, 10.0);
             }
-        } else {
-            rbc = randomInRange(4.1, 6.0);
-            hemoglobin = randomInRange(12.0, 17.5);
-            wbc = randomInRange(4500, 11000);
-            platelets = ThreadLocalRandom.current().nextInt(150_000, 450_001);
+            case 1 -> wbc = randomInRange(1500, 3500);
+            case 2 -> wbc = randomInRange(15000, 25000);
+            case 3 -> platelets = ThreadLocalRandom.current().nextInt(20_000, 80_000);
         }
 
         return new ExamData(

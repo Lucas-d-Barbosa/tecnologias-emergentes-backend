@@ -1,6 +1,6 @@
 package tecnologias_emergentes.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -20,21 +20,15 @@ import tecnologias_emergentes.repositories.ScheduleRepository.ScheduleReportProj
 import java.time.OffsetDateTime;
 
 @Service
+@RequiredArgsConstructor
 public class ScheduleService {
 
     private static final long DEFAULT_SERVICE_CODE = 1001L;
 
-    @Autowired
-    private ScheduleRepository scheduleRepository;
-
-    @Autowired
-    private HospitalRepository hospitalRepository;
-
-    @Autowired
-    private HospitalService hospitalService;
-
-    @Autowired
-    private CustomerRepository customerRepository;
+    private final ScheduleRepository scheduleRepository;
+    private final HospitalRepository hospitalRepository;
+    private final HospitalService hospitalService;
+    private final CustomerRepository customerRepository;
 
     public ResponseEntity<Page<Schedule>> findAll(Pageable pageable) {
         return ResponseEntity.ok(scheduleRepository.findAll(pageable));

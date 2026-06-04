@@ -1,7 +1,7 @@
 package tecnologias_emergentes.services;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -12,6 +12,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 
 @Service
 public class GroqAnalysisService {
@@ -30,7 +31,9 @@ public class GroqAnalysisService {
 
     public GroqAnalysisService(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
-        this.httpClient = HttpClient.newHttpClient();
+        this.httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
     }
 
     public String analyzeHemogram(ExamData examData, String perfilPaciente) {
@@ -71,6 +74,7 @@ public class GroqAnalysisService {
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(baseUrl))
+                    .timeout(Duration.ofSeconds(30))
                     .header("Authorization", "Bearer " + apiKey)
                     .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                     .POST(HttpRequest.BodyPublishers.ofString(requestBody))

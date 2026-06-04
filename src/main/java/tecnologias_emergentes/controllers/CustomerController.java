@@ -1,6 +1,7 @@
 package tecnologias_emergentes.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -13,10 +14,10 @@ import tecnologias_emergentes.services.CustomerService;
 
 @RestController
 @RequestMapping("/customer")
+@RequiredArgsConstructor
 public class CustomerController {
 
-    @Autowired
-    private CustomerService customerService;
+    private final CustomerService customerService;
 
     @GetMapping
     public ResponseEntity<Page<Customer>> findAll(@PageableDefault(size = 15) Pageable pageable) {
@@ -29,12 +30,12 @@ public class CustomerController {
     }
 
     @PostMapping
-    public ResponseEntity<CustomerCreateResponseDTO> save(@RequestBody CustomerDTO customerDTO) {
+    public ResponseEntity<CustomerCreateResponseDTO> save(@Valid @RequestBody CustomerDTO customerDTO) {
         return customerService.save(customerDTO);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Customer> update(@PathVariable Long id, @RequestBody CustomerDTO customerDTO) {
+    public ResponseEntity<Customer> update(@PathVariable Long id, @Valid @RequestBody CustomerDTO customerDTO) {
         return customerService.update(id, customerDTO);
     }
 

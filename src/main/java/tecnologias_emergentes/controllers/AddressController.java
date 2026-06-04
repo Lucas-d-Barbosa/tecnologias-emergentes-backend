@@ -1,6 +1,6 @@
 package tecnologias_emergentes.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,9 +11,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 @RestController
 @RequestMapping("address")
+@RequiredArgsConstructor
 public class AddressController {
-    @Autowired
-    private AddressService addressService;
+
+    private final AddressService addressService;
 
     @GetMapping
     public ResponseEntity<Page<Address>> findAll(@PageableDefault(size = 10) Pageable pageable){

@@ -1,6 +1,7 @@
 package tecnologias_emergentes.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -14,10 +15,10 @@ import tecnologias_emergentes.repositories.ExamRepository.ExamReportProjection;
 
 @RestController
 @RequestMapping("/exam")
+@RequiredArgsConstructor
 public class ExamController {
 
-    @Autowired
-    private ExamService examService;
+    private final ExamService examService;
 
     @GetMapping
     public ResponseEntity<Page<Exam>> findAll(@PageableDefault(size = 15) Pageable pageable) {
@@ -30,7 +31,7 @@ public class ExamController {
     }
 
     @PostMapping
-    public ResponseEntity<Exam> save(@RequestBody ExamDTO examDTO) {
+    public ResponseEntity<Exam> save(@Valid @RequestBody ExamDTO examDTO) {
         return examService.save(examDTO);
     }
 

@@ -1,6 +1,6 @@
 package tecnologias_emergentes.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -19,19 +19,13 @@ import tecnologias_emergentes.repositories.CustomerRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class CustomerService {
 
-    @Autowired
-    private CustomerRepository customerRepository;
-
-    @Autowired
-    private AddressService addressService;
-
-    @Autowired
-    private ExamService examService;
-
-    @Autowired
-    private ScheduleService scheduleService;
+    private final CustomerRepository customerRepository;
+    private final AddressService addressService;
+    private final ExamService examService;
+    private final ScheduleService scheduleService;
 
     public ResponseEntity<Page<Customer>> findAll(Pageable page) {
         return ResponseEntity.ok(customerRepository.findAll(page));

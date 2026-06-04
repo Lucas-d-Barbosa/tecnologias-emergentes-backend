@@ -1,6 +1,6 @@
 package tecnologias_emergentes.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +20,7 @@ import java.util.Optional;
 
 
 @Service
+@RequiredArgsConstructor
 public class HospitalService {
 
     private static final BigDecimal NEARBY_DISTANCE_THRESHOLD = new BigDecimal("0.0100");
@@ -27,11 +28,8 @@ public class HospitalService {
     private static final String AUTO_HOSPITAL_NAME = "Hospital Proximo";
     private static final String AUTO_HOSPITAL_TYPE = "Privado";
 
-    @Autowired
-    private HospitalRepository hospitalRepository;
-
-    @Autowired
-    private AddressService addressService;
+    private final HospitalRepository hospitalRepository;
+    private final AddressService addressService;
 
     public ResponseEntity<Page<Hospital>> findAll(Pageable pageable) {
         return ResponseEntity.ok(hospitalRepository.findAll(pageable));

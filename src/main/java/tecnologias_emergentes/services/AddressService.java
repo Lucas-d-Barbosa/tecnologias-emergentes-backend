@@ -1,6 +1,6 @@
 package tecnologias_emergentes.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -10,14 +10,13 @@ import tecnologias_emergentes.exceptions.ResourceNotFoundException;
 import tecnologias_emergentes.models.Address;
 import tecnologias_emergentes.repositories.AddressRepository;
 
-import java.util.Optional;
-
 import static tecnologias_emergentes.dtos.AddressDTO.mapperToAddress;
 
 @Service
+@RequiredArgsConstructor
 public class AddressService {
-    @Autowired
-    private AddressRepository addressRepository;
+
+    private final AddressRepository addressRepository;
 
     public ResponseEntity<Page<Address>> findAll(Pageable page){
         Page<Address> response = addressRepository.findAll(page);
@@ -25,9 +24,9 @@ public class AddressService {
     }
 
     public ResponseEntity<Address> findById(Long id){
-        Optional<Address> address = addressRepository.findById(id);
-        if(address.isEmpty()) throw new ResourceNotFoundException("Endereço não encontrado.");
-        return ResponseEntity.ok().body(address.get());
+        Address address = addressRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Endereço não encontrado."));
+        return ResponseEntity.ok().body(address);
     }
 
     public ResponseEntity<Address> save(AddressDTO addressDTO){
@@ -56,9 +55,9 @@ public class AddressService {
     }
 
     public ResponseEntity<Void> delete(Long id){
-        Optional<Address> address = addressRepository.findById(id);
-        if(address.isEmpty()) throw new ResourceNotFoundException("Endereço não encontrado.");
-        addressRepository.delete(address.get());
+        Address address = addressRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Endereço não encontrado."));
+        addressRepository.delete(address);
         return  ResponseEntity.noContent().build();
     }
 }

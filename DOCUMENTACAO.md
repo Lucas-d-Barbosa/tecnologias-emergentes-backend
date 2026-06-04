@@ -30,14 +30,13 @@ três pontos:
 - Cálculo do hospital "mais próximo" por distância geográfica simplificada.
 - Análise de hemograma via IA (Groq) com tom de atendimento diferenciado por classe.
 - Relatórios nativos (SQL puro) de exames normais e de agendamentos.
+- Validação de entrada (Bean Validation) nos DTOs de criação/atualização.
 - Tratamento global de erros com payload padronizado.
 - Seed inicial de endereços e hospitais de Juazeiro do Norte na subida da aplicação.
 
 ### O que o sistema NÃO FAZ
 
 - **Não tem autenticação/autorização** — todas as rotas são públicas.
-- **Não tem validação de entrada** (Bean Validation) — DTOs não usam `@NotNull`,
-  `@Email` etc. (a dependência `spring-boot-starter-validation` não está no projeto).
 - **Não há update de exame nem de hospital**, e exames/agendamentos não têm
   endpoint de `DELETE`.
 - **Não persiste a observação da IA** — o laudo do Groq é gerado on-demand a cada
@@ -61,7 +60,8 @@ três pontos:
 | Framework         | Spring Boot 4.0.6 (Web, Data JPA)                        |
 | Banco             | PostgreSQL (produção/dev), H2 (testes)                  |
 | ORM               | Hibernate / JPA                                          |
-| Serialização JSON | Jackson (databind/core 2.17.0)                           |
+| Serialização JSON | Jackson 3 (`tools.jackson`, via Spring Boot)            |
+| Validação         | Bean Validation (`spring-boot-starter-validation`)      |
 | Boilerplate       | Lombok                                                   |
 | IA externa        | Groq API (`llama-3.3-70b-versatile`) via `java.net.http`|
 | Build             | Maven (wrapper `mvnw` incluso)                           |
@@ -102,7 +102,7 @@ PostgreSQL   ── tabelas relacionais + coluna JSONB (exam_data)
 | `dtos`          | Records de entrada/saída + métodos estáticos de mapeamento.               |
 | `enums`         | `CustomerClass` (STANDARD/PREMIUM), `ExamType` (HEMOGRAM/BIOCHEMICAL/...).  |
 | `exceptions`    | Exceções de domínio + `GlobalExceptionHandler` (`@RestControllerAdvice`). |
-| `config`        | CORS, seed de dados, bean do Jackson `ObjectMapper`.                       |
+| `config`        | CORS (`CorsConfig`) e seed de dados (`DataSeeder`).                        |
 
 ### Observações de design
 
@@ -111,11 +111,15 @@ PostgreSQL   ── tabelas relacionais + coluna JSONB (exam_data)
   transporte com negócio — um ponto de atenção arquitetural.
 - **Mapeamento via métodos estáticos nos DTOs** (`mapperToCustomer`, etc.) em vez de
   uma biblioteca (MapStruct/ModelMapper).
+- **Injeção por construtor** (`@RequiredArgsConstructor` do Lombok, campos `final`) em
+  todos os controllers e services, em vez de `@Autowired` em campo.
 - **Records do Java 21** para o payload JSONB, garantindo imutabilidade dos dados de
   exame.
-- **Duas instâncias de `ObjectMapper`**: uma como bean (`JacksonConfig`, usada pelo
-  `GroqAnalysisService`) e outra criada manualmente dentro do `ExamDataConverter`
-  (pois conversores JPA não são gerenciados pelo Spring).
+- **`ObjectMapper`**: o `GroqAnalysisService` recebe por injeção o `ObjectMapper`
+  configurado pelo Spring Boot (Jackson 3); o `ExamDataConverter` instancia o seu
+  próprio (conversores JPA não são beans gerenciados pelo Spring). Não há mais bean
+  manual de `ObjectMapper` — o antigo `JacksonConfig` foi removido para não sobrescrever
+  o mapper bem-configurado do Boot.
 
 ---
 
@@ -220,7 +224,10 @@ Exemplos de payload/resposta completos estão em `guides/api_routes.md`.
 
 Operação transacional que encadeia várias regras:
 
-1. **Validação mínima**: endereço é obrigatório → senão `BusinessRuleException` (400).
+1. **Validação de entrada**: o `CustomerDTO` é validado com Bean Validation (`@Valid`):
+   `name`/`email` obrigatórios (e-mail com formato válido), `customerClass` e `address`
+   obrigatórios → senão `400` via `MethodArgumentNotValidException`. O service ainda
+   mantém a checagem de endereço como defesa adicional (`BusinessRuleException`, 400).
 2. **Resolve-or-create do endereço**: procura endereço por `street + houseNumber +
    city`; se existir, reaproveita; senão cria. Evita duplicar endereços.
 3. **Persiste o cliente** vinculado a esse endereço.
@@ -254,11 +261,11 @@ Operação transacional que encadeia várias regras:
 
 ### 6.4. Geração de dados do hemograma — `ExamService.generateRandomHemogramData`
 
-Gera valores aleatórios para hemácias, hemoglobina, leucócitos e plaquetas. O `if`
-de controle usa `nextDouble() < 1.0`, ou seja, **sempre** cai no ramo de "cenário de
-risco", sorteando 1 de 4 perfis anormais (anemia, leucopenia, leucocitose,
-plaquetopenia). O ramo "normal" (`else`) é código morto na configuração atual — essa
-geração sempre-anormal é intencional (ver histórico de commits).
+Parte de uma base de valores dentro da normalidade e então **sempre** sorteia 1 de 4
+perfis anormais (anemia, leucopenia, leucocitose, plaquetopenia), alterando o eixo
+correspondente para fora da faixa de referência. Essa geração sempre-anormal é
+intencional (ver histórico de commits) e está implementada com um `switch` sobre o tipo
+de risco sorteado — sem ramos mortos.
 
 A flag `isAbnormal` é calculada a partir dos próprios dados do exame
 (`isHemogramAbnormal`): cada componente é comparado com sua faixa de referência embutida
@@ -280,7 +287,8 @@ normais.
     UBS/SUS.
 - Envia o JSON do exame como *user prompt*, com `temperature = 0.2`.
 - Faz POST HTTP direto (`java.net.http.HttpClient`) ao endpoint OpenAI-compatible da
-  Groq, extrai `choices[0].message.content`.
+  Groq, extrai `choices[0].message.content`. O client tem `connectTimeout` de 10s e a
+  requisição tem `timeout` de 30s, evitando travar a thread caso a Groq não responda.
 - **Tolerante a falhas**: qualquer erro (HTTP, IO, timeout) é capturado e devolve uma
   mensagem amigável em vez de propagar exceção — o exame nunca deixa de ser retornado
   por causa da IA.
@@ -320,7 +328,7 @@ Juazeiro do Norte/CE, reaproveitando endereços já existentes (idempotente).
 |---------------------------|----------------------------------|------------------------------|
 | `SPRING_DATASOURCE_URL`   | `jdbc:postgresql://localhost:5432/postgres` | Conexão DB        |
 | `SPRING_DATASOURCE_USERNAME` | `postgres`                    | Usuário DB                   |
-| `SPRING_DATASOURCE_PASSWORD` | `admin`                       | Senha DB                     |
+| `SPRING_DATASOURCE_PASSWORD` | *(vazio)*                     | Senha DB — sem default; deve ser definida no ambiente/`.env` |
 | `GROQ_API_KEY`            | *(vazio)*                        | Habilita o laudo premium     |
 | `GROQ_MODEL`              | `llama-3.3-70b-versatile`        | Modelo Groq                  |
 | `GROQ_BASE_URL`           | endpoint Groq OpenAI-compatible  | URL da API                   |
@@ -366,13 +374,16 @@ Não há testes de controller, repositório ou da integração com o Groq.
 
 ## 9. Pontos de atenção / dívidas técnicas
 
-- `generateRandomHemogramData` sempre gera cenário anormal (`< 1.0`); o ramo "normal"
-  é código morto. A flag `isAbnormal` agora é derivada dos valores reais do exame, então
-  o relatório de "exames normais" ficou consistente — mas, enquanto a geração
-  permanecer sempre-anormal, esse relatório tende a retornar vazio para exames
-  automáticos. Ajustar a probabilidade (`< 1.0`) caso se queira uma mistura de exames.
-- Ausência de Bean Validation nos DTOs (entrada não validada formalmente).
+- `generateRandomHemogramData` **sempre** gera um cenário anormal (sorteia 1 de 4
+  perfis de risco). A flag `isAbnormal` é derivada dos valores reais do exame, então o
+  relatório de "exames normais" fica consistente — mas, enquanto a geração permanecer
+  sempre-anormal, esse relatório tende a retornar vazio para exames automáticos.
+  Reintroduzir um ramo "normal" caso se queira uma mistura de exames.
 - Sem autenticação — adequado para fins acadêmicos, não para produção.
+- Endpoints de leitura ainda retornam **entidades JPA** (`Customer`, `Hospital`, etc.)
+  em vez de DTOs de resposta — vaza o modelo de persistência e infla o payload (ex.:
+  lista `customers` dentro de `address`).
+- Services retornam `ResponseEntity` (transporte HTTP misturado à camada de negócio).
 - Diretriz de atendimento da IA diferencia explicitamente clientes por poder
   aquisitivo — sensível do ponto de vista ético; documentado aqui por transparência.
 - "Distância" entre endereços é aproximação linear, não geográfica.
