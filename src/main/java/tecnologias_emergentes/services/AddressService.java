@@ -45,11 +45,13 @@ public class AddressService {
         Address existingAddress = addressRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Endereço não encontrado."));
 
-        existingAddress.setStreet(addressDTO.street());
-        existingAddress.setCity(addressDTO.city());
-        existingAddress.setHouseNumber(addressDTO.houseNumber());
-        existingAddress.setLatitude(addressDTO.latitude());   // Aqui ambos já serão BigDecimal
-        existingAddress.setLongitude(addressDTO.longitude()); // Aqui ambos já serão BigDecimal
+        // PATCH parcial: so atualiza os campos enviados, preservando os demais.
+        // Para requests com o corpo completo o resultado e identico ao anterior.
+        if (addressDTO.street() != null) existingAddress.setStreet(addressDTO.street());
+        if (addressDTO.city() != null) existingAddress.setCity(addressDTO.city());
+        if (addressDTO.houseNumber() != null) existingAddress.setHouseNumber(addressDTO.houseNumber());
+        if (addressDTO.latitude() != null) existingAddress.setLatitude(addressDTO.latitude());
+        if (addressDTO.longitude() != null) existingAddress.setLongitude(addressDTO.longitude());
         return ResponseEntity.ok().body(addressRepository.save(existingAddress));
     }
 

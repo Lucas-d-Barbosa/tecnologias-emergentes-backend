@@ -54,11 +54,13 @@ public class ExamService {
     }
 
     public Exam createAutomaticHemogram(Customer customer) {
+        ExamData examData = generateRandomHemogramData();
+
         Exam exam = Exam.builder()
                 .customer(customer)
                 .type(ExamType.HEMOGRAM)
-                .examData(generateRandomHemogramData())
-                .isAbnormal(false)
+                .examData(examData)
+                .isAbnormal(isHemogramAbnormal(examData))
                 .build();
 
         return examRepository.save(exam);
@@ -154,5 +156,54 @@ public class ExamService {
 
     private double randomInRange(double min, double max) {
         return Math.round((ThreadLocalRandom.current().nextDouble(min, max) * 10.0)) / 10.0;
+    }
+
+    private static final int PLATELETS_REF_MIN = 150_000;
+    private static final int PLATELETS_REF_MAX = 450_000;
+
+    // Marca o exame como anormal se qualquer componente sair da sua faixa de referencia.
+    private boolean isHemogramAbnormal(ExamData examData) {
+        if (examData == null) {
+            return false;
+        }
+
+        Erythrogram erythrogram = examData.erythrogram();
+        Leukogram leukogram = examData.leukogram();
+
+        boolean erythrogramAbnormal = erythrogram != null
+                && (isOutsideReference(erythrogram.rbc()) || isOutsideReference(erythrogram.hemoglobin()));
+        boolean leukogramAbnormal = leukogram != null && isOutsideReference(leukogram.wbc_total());
+
+        return erythrogramAbnormal || leukogramAbnormal || isPlateletsAbnormal(examData.platelets());
+    }
+
+    // Interpreta o campo "ref" no formato "min-max" e verifica se o valor esta fora da faixa.
+    private boolean isOutsideReference(ExamComponent component) {
+        if (component == null || component.value() == null || component.ref() == null) {
+            return false;
+        }
+
+        String[] bounds = component.ref().split("-");
+        if (bounds.length != 2) {
+            return false;
+        }
+
+        try {
+            double min = Double.parseDouble(bounds[0].trim());
+            double max = Double.parseDouble(bounds[1].trim());
+            double value = component.value();
+            return value < min || value > max;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    private boolean isPlateletsAbnormal(Platelets platelets) {
+        if (platelets == null || platelets.count() == null) {
+            return false;
+        }
+
+        int count = platelets.count();
+        return count < PLATELETS_REF_MIN || count > PLATELETS_REF_MAX;
     }
 }
