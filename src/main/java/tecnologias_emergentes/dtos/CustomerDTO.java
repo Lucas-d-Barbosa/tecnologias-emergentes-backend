@@ -1,14 +1,22 @@
 package tecnologias_emergentes.dtos;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import tecnologias_emergentes.enums.CustomerClass;
 import tecnologias_emergentes.models.Address;
 import tecnologias_emergentes.models.Customer;
 
 public record CustomerDTO(
+        @NotBlank(message = "O nome é obrigatório.")
         String name,
+        @NotBlank(message = "O e-mail é obrigatório.")
+        @Email(message = "O e-mail informado é inválido.")
         String email,
+        @NotNull(message = "A classe do cliente é obrigatória.")
         CustomerClass customerClass,
-        AddressDTO address 
+        @NotNull(message = "Os dados de endereço são obrigatórios.")
+        AddressDTO address
 ) {
     public static Customer mapperToCustomer(CustomerDTO customerDTO, Address address){
         return Customer.builder()

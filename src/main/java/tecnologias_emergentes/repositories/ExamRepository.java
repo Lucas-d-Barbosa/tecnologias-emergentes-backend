@@ -5,10 +5,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import tecnologias_emergentes.enums.ExamType;
 import tecnologias_emergentes.models.Exam;
+
+import java.util.Optional;
 
 @Repository
 public interface ExamRepository extends JpaRepository<Exam, Long> {
+
+    Optional<Exam> findFirstByCustomer_IdAndTypeOrderByOrderDateDesc(Long customerId, ExamType type);
 
     @Query(value = """
         SELECT 

@@ -57,7 +57,15 @@ A aplicação estará disponível em http://localhost:8080.
    ./mvnw spring-boot:run
 2. Via Jar (Modo Produção)
    ./mvnw package
-   java -jar target/nome-do-projeto-0.0.1-SNAPSHOT.jar
+   java -jar target/tecnologias-emergentes-0.0.1-SNAPSHOT.jar
+
+## 📚 Documentação
+
+* **Documentação técnica completa**: [`DOCUMENTACAO.md`](DOCUMENTACAO.md) — arquitetura,
+  modelo de dados, regras de negócio e configuração.
+* **Guia de rotas (payloads e retornos)**: [`guides/api_routes.md`](guides/api_routes.md)
+  — corpo de cada requisição, respostas de sucesso e de erro, validações e paginação.
+* **DDL de referência**: [`guides/sql_entity.md`](guides/sql_entity.md).
 
 ## 🧪 Testando a API (Sem Nuvem)
 

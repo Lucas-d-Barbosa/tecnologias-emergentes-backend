@@ -1,5 +1,6 @@
 package tecnologias_emergentes.dtos;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import tecnologias_emergentes.models.Address;
 import java.math.BigDecimal;
 
@@ -8,6 +9,7 @@ public record AddressDTO(
         BigDecimal longitude,
         String city,
         String street,
+    @JsonAlias({"number"})
         Integer houseNumber) {
 
     public static Address mapperToAddress(AddressDTO dto) {

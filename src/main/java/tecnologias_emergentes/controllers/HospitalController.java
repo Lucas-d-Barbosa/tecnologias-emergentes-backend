@@ -1,6 +1,7 @@
 package tecnologias_emergentes.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -12,10 +13,10 @@ import tecnologias_emergentes.services.HospitalService;
 
 @RestController
 @RequestMapping("/hospital")
+@RequiredArgsConstructor
 public class HospitalController {
 
-    @Autowired
-    private HospitalService hospitalService;
+    private final HospitalService hospitalService;
 
     @GetMapping
     public ResponseEntity<Page<Hospital>> findAll(@PageableDefault(size = 15) Pageable pageable) {
@@ -28,7 +29,7 @@ public class HospitalController {
     }
 
     @PostMapping
-    public ResponseEntity<Hospital> save(@RequestBody HospitalDTO hospitalDTO) {
+    public ResponseEntity<Hospital> save(@Valid @RequestBody HospitalDTO hospitalDTO) {
         return hospitalService.save(hospitalDTO);
     }
 

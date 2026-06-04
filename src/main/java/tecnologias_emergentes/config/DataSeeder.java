@@ -1,6 +1,7 @@
 package tecnologias_emergentes.config;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import tecnologias_emergentes.dtos.AddressDTO;
@@ -13,6 +14,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Component
+@Profile("!test")
 public class DataSeeder implements CommandLineRunner {
 
     private final AddressService addressService;
